@@ -35,21 +35,12 @@ Quantifying adipose depots across ages, diets, sexes and strains is labor-intens
 
 ### Training data and ground truth
 To encourage **broad generalization**, training combined:
-- **Populations:** Outbred + inbred (e.g., **B6.Cg-Lepob/J (ob/ob)**, **NZO/HlLtJ**)
+- **Populations:** Multiple mouse strains (e.g., **B6.Cg-Lepob/J (ob/ob)**, **NZO/HlLtJ**)
 - **Sex:** Male and female
-- **Diet:** Chow and Western diet
+- **Diet:** Chow and Western style high sugar/fat diets
 - **Diversity:** Age and tube voltage variation
 - **Labels:** **Dissected depot weights** for SUBQ and VAT (grams), measured post-mortem
-- **Validation split:** **13%** held out (never seen during training)
-
----
-
-### Preprocessing (for training and inference)
-- **Auto inversion** to ensure white background, dark mouse (robust to TIFF/DICOM conventions)
-- **Scaling** to a common density (default **21.3292 px/mm**)
-- **Fixed ROI**: **2240×1600 px** cropped around the torso
-- **Canvas**: ROI pasted onto **2300×2300 px** white canvas
-- **Model input**: Normalized grayscale resized to **512×512**
+- **Validation split:** **10%** held out
 
 ---
 
@@ -69,7 +60,7 @@ Each depot is predicted by its **own CNN-based regression network**:
 - **SUBQ:** **R² = 0.955**  
 - **VAT:** **R² = 0.945**
 
-These values reflect performance on previously unseen animals drawn from the same diverse distribution described above.
+These values reflect performance on previously unseen animals.
 
 ---
 
@@ -83,7 +74,7 @@ These values reflect performance on previously unseen animals drawn from the sam
 ---
 
 ### Getting started (quick)
-- **Model inference:** Use any Python environment with TensorFlow/Keras; normalize grayscale inputs as described in *Preprocessing* and pass through the SUBQ and VAT models for gram-level predictions.
+- **Model inference:** Use any Python environment with TensorFlow/Keras, and code named DEXAdipo_inference.py. For fine-tuning use DEXAdipo_train.py
 - **Or try the online version:** https://fullerlabtools.shinyapps.io/dexadipo-ai/
 ---
 
