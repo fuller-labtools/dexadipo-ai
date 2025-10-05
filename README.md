@@ -21,12 +21,9 @@ Quantifying adipose depots across ages, diets, sexes and strains is labor-intens
 ---
 
 ### What the model expects (inputs)
-- **Imaging modality:** **Single-energy (low-energy) DR**, not dual-energy DEXA.
-- **Recommended tube voltage:** **~35–45 kVp** (empirically robust range).
+- **Imaging modality:** **Single-energy (low-energy) DR**.
+- **Recommended tube voltage:** **~35–45 kVp**.
 - **Image formats:** DICOM / TIFF / PNG / JPG.
-- **Resolution:** Works at arbitrary resolution; default is **21.3292 px/mm** (calibrated on **UltraFocusDXA by Faxitron®**).  
-- **Pose/orientation:** Mouse **facing right** (nose to the right), body roughly horizontal.
-  
 ---
 
 ### What the model produces (outputs)
@@ -78,8 +75,10 @@ These values reflect performance on previously unseen animals drawn from the sam
 
 ### Intended use & limitations
 - **Research use only**; not a clinical diagnostic device.
-- Best performance is achieved when images are **low-energy DR** within the **~35–45 kVp** range and follow the **orientation/ROI** conventions above.
-- Extreme phenotypes or imaging protocols far outside training distribution may reduce accuracy; consider fine-tuning the model with additonal examples.
+- Best performance is achieved with **single-energy, low-energy DR (~35–45 kVp)** and the following conventions:  
+- **Orientation:** mouse faces right (nose right) with the body horizontally aligned.  
+- **ROI:** center on the spinal midline; keep the **torso fully inside** the ROI (the head may be cropped).  
+- Performance may degrade for extreme phenotypes or imaging protocols outside the training distribution; consider fine-tuning the model with additional examples.
 
 ---
 
@@ -89,4 +88,4 @@ These values reflect performance on previously unseen animals drawn from the sam
 ---
 
 ### Citation
-If you use DEXAdipo AI in a publication, please cite this repository and paper.
+If you use DEXAdipo in a publication, please cite this repository and paper.
