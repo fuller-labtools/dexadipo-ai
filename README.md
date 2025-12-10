@@ -10,7 +10,7 @@
 
 ## DEXAdipo — Model Overview
 
-**DEXAdipo** predicts **subcutaneous (SUBQ)** and **visceral (VAT)** adipose tissue mass (g) from **single-energy digital radiography (DR)** images of mice. It couples robust preprocessing with two dedicated convolutional regression models to deliver fast, reproducible adipose quantification without manual pad dissection. **Try the online version:** https://fullerlabtools.shinyapps.io/dexadipo-ai/
+**DEXAdipo** predicts **subcutaneous (SUBQ)** and **visceral (VAT)** adipose tissue mass (g) from **single-energy digital radiography (DR)** images of mice. It couples robust preprocessing with two dedicated convolutional regression models to deliver fast, reproducible non-invasive adipose depot quantification. **Try the online version:** https://fullerlabtools.shinyapps.io/dexadipo-ai/
 
 ---
 
