@@ -3,10 +3,9 @@
     <img src="https://github.com/user-attachments/assets/8a29b7e3-f6c1-4fdf-8d1e-05cc19d88cf4" alt="DEXAdipo logo" height="220">
   </span>
   <span style="display:inline-block; vertical-align:middle;">
-    <img src="https://github.com/user-attachments/assets/5f338ce8-33e7-4174-89ac-cc61def4f22e" alt="ML diagram" height="200">
+    <img src="https://github.com/user-attachments/assets/1d114f74-ed93-426a-ad42-0f93ea963471" alt="ML diagram" height="220">
   </span>
 </p>
-
 
 
 ## DEXAdipo — Model Overview
