@@ -79,4 +79,4 @@ These values reflect performance on previously unseen animals.
 ---
 
 ### Citation
-If you use DEXAdipo in a publication, please cite this repository and paper.
+If you use DEXAdipo in a publication, please cite this repository.
