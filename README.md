@@ -147,9 +147,15 @@ pip install tensorflow numpy pandas scikit-image scikit-learn matplotlib
 # pip install -r requirements.txt
 ```
 If you have a CUDA-capable GPU, install the appropriate GPU-enabled TensorFlow build.
-- Download / place the trained model file(s)
-- Place your trained .h5 model file(s) (e.g. DXA_PRED_SUBQ_PNG_r2_99.h5 or final_best_model.h5) in a convenient directory.
-- Point MODEL_PATH in DEXAdipo_inference.py to this file.
+
+### Pretrained model weights
+- Download the pretrained models (SUBQ_model.h5 and VAT_model.h5) from the GitHub Releases page, e.g. under tag v1.0.0.
+- Place them in a convenient directory (for example):
+  - models/subq/SUBQ_model.h5
+  - models/vat/VAT_model.h5
+- Point MODEL_PATH in DEXAdipo_inference.py (and/or your own scripts) to the appropriate .h5 file.
+
+If you prefer, you can also train your own models from scratch using DEXAdipo_train.py (see Section 4).
 
 ### 2.2 Typical install time
 On a “normal” desktop or laptop with a reasonable internet connection, creating the environment and installing the Python dependencies typically takes ~10–20 minutes.
@@ -160,14 +166,14 @@ On a “normal” desktop or laptop with a reasonable internet connection, creat
 ### 3.1 Demo via the Shiny app (small example dataset)
 The Shiny app includes a built-in example dataset under the dropdown:
 - Example Images: Lean mouse · High adiposity mouse
-- You can use this directly to demo the model:
+You can use this directly to demo the model:
 - Go to: https://fullerlabtools.shinyapps.io/dexadipo-ai/
 
 In the image selection panel, choose:
 - “Lean mouse” (low adiposity example)
 - “High adiposity mouse” (high adiposity example)
-- Draw a reasonable ROI around the torso as instructed.
-- Run predictions.
+Draw a reasonable ROI around the torso as instructed.
+Run predictions.
 Typical prediction ranges observed based on ROI selection
 High_adiposity_example
 - SUBQ: ~5.53–5.96 g
@@ -180,47 +186,48 @@ These ranges reflect small variations due to ROI placement but are robust to rea
 Expected run time (demo via Shiny):
 - Prediction for each example image is essentially instantaneous from the user’s perspective.
 
-### 3.2 local Python demo
+### 3.2 Local Python demo
 If you prefer a local Python demo:
 Prepare a small folder of DR images (e.g. DICOMs, TIFFs, PNGs) and a CSV with a FILENAMES column:
-
+```bash
 demo/
   demo_images/
     High_adiposity_example.png
     Low_adiposity_example.png
   demo_newdata.csv
-
+```
 
 Example demo_newdata.csv:
+```bash
 FILENAMES
 High_adiposity_example.png
 Low_adiposity_example.png
-
+```
 
 Edit DEXAdipo_inference.py:
-
+```bash
 MODEL_PATH = "path/to/your_trained_model.h5"
 NEW_DATASET_CSV = "demo/demo_newdata.csv"
 BASE_DIR = "demo/demo_images"
 OUTPUT_CSV = "demo/demo_predictions.csv"
-
-
+```
 Run:
+```bash
 python DEXAdipo_inference.py
+```
 
-The script prints a table like:
-
+The script prints a table as follows:
+```bash
 Filename                     Predicted
 High_adiposity_example.png   9.1
 Low_adiposity_example.png    2.9
-
+```
 
 (Values will differ depending on which trained model you use and the actual images.)
 
 The same results are saved to demo/demo_predictions.csv.
 
-Expected run time (local demo):
-
+#### Expected run time (local demo):
 For 2–10 images on a standard CPU-only desktop, inference completes in a few seconds (≪ 1 minute).
 
 ---
@@ -235,23 +242,22 @@ Ensure:
 - The torso is fully visible in the ROI for the method you use.
 
 For training, create a CSV file with at least:
+- FILENAMES – image file names (e.g. mouse1.png)
+- SUBQ – numeric labels for subcutaneous depot mass in grams
 
-FILENAMES – image file names (e.g. mouse1.png)
-
-SUBQ – numeric labels for subcutaneous depot mass in grams
-
-(Use VAT instead if you adapt the script for visceral training.)
+(For other depots, use the corresponding label column instead of SUBQ — for example VAT for visceral fat, or any other depot name you choose — and make sure the training script reads from that column.)
 
 Store images and CSV in a directory structure such as:
-
+```bash
 data/
   train_images/
     mouse1.png
     mouse2.png
     ...
   train_labels_subq.csv
+```
 
-4.2 Training a new SUBQ model from scratch (DEXAdipo_train.py)
+### 4.2 Training a new SUBQ model from scratch (DEXAdipo_train.py)
 
 The training script is configured by default for SUBQ regression.
 
