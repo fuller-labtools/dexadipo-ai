@@ -261,7 +261,7 @@ For training, create a CSV file with at least:
 - FILENAMES – image file names (e.g. mouse1.png)
 - SUBQ – numeric labels for subcutaneous depot mass in grams
 
-(For other depots, use the corresponding label column instead of SUBQ — for example VAT for visceral fat, or any other depot name you choose — and make sure the training script reads from that column.)
+(For other depots, use the corresponding label column instead of SUBQ. E.g., VAT for visceral fat, or any other depot you choose. Make sure the training script reads from that column.)
 
 Store images and CSV in a directory structure such as:
 ```text
@@ -440,4 +440,4 @@ best_model = tf.keras.models.load_model(
 
 #### Expected runtime (inference)
 - For tens of images on CPU, inference typically runs in seconds to a couple of minutes, depending on CPU speed and model size.
-- On GPU, inference is effectively instantaneous for typical batch sizes.
+- On GPU, inference is effectively instantaneous for most batch sizes.
