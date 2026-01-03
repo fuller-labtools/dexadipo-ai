@@ -75,7 +75,34 @@ These values reflect performance on previously unseen animals.
 ### Getting started (quick)
 - **Model inference:** Use any Python environment with TensorFlow/Keras, and code named DEXAdipo_inference.py. For fine-tuning use DEXAdipo_train.py
 - **Or try the online version:** https://fullerlabtools.shinyapps.io/dexadipo-ai/
+
 ---
 
-### Citation
-If you use DEXAdipo in a publication, please cite this repository.
+## 1. System requirements
+
+### 1.1 Operating systems
+
+DEXAdipo is implemented in Python and TensorFlow/Keras and should run on any 64-bit OS that supports these libraries, including:
+
+- Linux (e.g. Ubuntu or similar recent distributions)
+- macOS (Intel or Apple Silicon, via a compatible Python + TensorFlow 2.x installation)
+- Windows 10/11 (native Python or WSL2)
+
+### 1.2 Software dependencies
+
+Core Python dependencies (in addition to the standard library):
+
+- Python ≥ 3.8  
+- `tensorflow` (TensorFlow 2.x)  
+- `numpy`  
+- `pandas`  
+- `scikit-image`  
+- `scikit-learn`  
+- `matplotlib` (used for plotting augmented images in training)
+
+You can either install these directly (see below) or run:
+
+```bash
+pip install -r requirements.txt
+
+
