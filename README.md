@@ -191,46 +191,58 @@ Expected run time (demo via Shiny):
 - Prediction for each example image is essentially instantaneous from the user’s perspective.
 
 ### 3.2 Local Python demo
-If you prefer a local Python demo:
-Prepare a small folder of DR images (e.g. DICOMs, TIFFs, PNGs) and a CSV with a FILENAMES column:
-```bash
+If you prefer a local Python demo using the **included example PNGs** and **pretrained models**:
+Prepare a small folder of DR images and a CSV with a `FILENAMES` column:
+
+```text
 demo/
   demo_images/
     High_adiposity_example.png
     Low_adiposity_example.png
   demo_newdata.csv
 ```
-
 Example demo_newdata.csv:
-```bash
+```text
 FILENAMES
 High_adiposity_example.png
 Low_adiposity_example.png
 ```
+Edit DEXAdipo_inference.py to run the demo twice: once with the SUBQ model and once with the VAT model.
 
-Edit DEXAdipo_inference.py:
-```bash
-MODEL_PATH = "path/to/your_trained_model.h5"
+#### SUBQ demo (using SUBQ_model.h5):
+```text
+MODEL_PATH      = "path/to/SUBQ_model.h5"
 NEW_DATASET_CSV = "demo/demo_newdata.csv"
-BASE_DIR = "demo/demo_images"
-OUTPUT_CSV = "demo/demo_predictions.csv"
+BASE_DIR        = "demo/demo_images"
+OUTPUT_CSV      = "demo/demo_predictions_SUBQ.csv"
 ```
 Run:
 ```bash
 python DEXAdipo_inference.py
 ```
-
-The script prints a table as follows:
-```bash
-Filename                     Predicted
-High_adiposity_example.png   9.1
-Low_adiposity_example.png    2.9
+#### VAT demo (using VAT_model.h5):
+```text
+MODEL_PATH      = "path/to/VAT_model.h5"
+NEW_DATASET_CSV = "demo/demo_newdata.csv"
+BASE_DIR        = "demo/demo_images"
+OUTPUT_CSV      = "demo/demo_predictions_VAT.csv"
 ```
+Run:
+```bash
+python DEXAdipo_inference.py
+```
+Each run will print a table like:
+```text
+# Using SUBQ_model.h5 (subcutaneous fat, grams)
+Filename                     Predicted
+High_adiposity_example.png   5.82
+Low_adiposity_example.png    2.27
 
-(Values will differ depending on which trained model you use and the actual images.)
-
-The same results are saved to demo/demo_predictions.csv.
-
+# Using VAT_model.h5 (visceral fat, grams)
+Filename                     Predicted
+High_adiposity_example.png   10.76
+Low_adiposity_example.png    2.75
+```
 #### Expected run time (local demo):
 For 2–10 images on a standard CPU-only desktop, inference completes in a few seconds (≪ 1 minute).
 
@@ -252,7 +264,7 @@ For training, create a CSV file with at least:
 (For other depots, use the corresponding label column instead of SUBQ — for example VAT for visceral fat, or any other depot name you choose — and make sure the training script reads from that column.)
 
 Store images and CSV in a directory structure such as:
-```bash
+```text
 data/
   train_images/
     mouse1.png
@@ -266,14 +278,14 @@ data/
 The training script is configured by default for SUBQ regression.
 
 Open DEXAdipo_train.py and set the CONFIG paths:
-```bash
+```text
 LABEL_CSV      = "data/train_labels_subq.csv"   # CSV with FILENAMES and SUBQ
 IMAGE_BASE_DIR = "data/train_images"            # Directory containing PNG images
 MODELS_DIR     = "models/subq"                  # Output directory for models/checkpoints
 ```
 
 The CSV must contain at least:
-```bash
+```text
 FILENAMES,SUBQ
 mouse1.png,3.45
 mouse2.png,5.12
@@ -365,7 +377,7 @@ If you are using the Shiny app to explore ROI placement, mimic that same ROI whe
 
 #### Organise files and create a CSV
 Put your preprocessed DR images in a folder, e.g.:
-```bash
+```text
 data/
   new_images/
     mouseA.png
@@ -374,18 +386,17 @@ data/
   new_images.csv
 ```
 new_images.csv must contain at least a FILENAMES column:
-```bash
+```text
 FILENAMES
 mouseA.png
 mouseB.png
 ```
 #### Configure DEXAdipo_inference.py
-
 Set new_img_size to match the resolution used for the released models (typically:
 - new_img_size = (512, 512)
 
 - To predict SUBQ using the pretrained model:
-```bash
+```text
 MODEL_PATH      = "path/to/SUBQ_model.h5"
 NEW_DATASET_CSV = "data/new_images.csv"
 BASE_DIR        = "data/new_images"
@@ -393,7 +404,7 @@ OUTPUT_CSV      = "results/new_predictions_SUBQ.csv"
 ```
 
 To predict VAT using the pretrained model:
-```bash
+```text
 MODEL_PATH      = "path/to/VAT_model.h5"
 NEW_DATASET_CSV = "data/new_images.csv"
 BASE_DIR        = "data/new_images"
