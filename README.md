@@ -163,24 +163,28 @@ On a “normal” desktop or laptop with a reasonable internet connection, creat
 ---
 
 ### 3. Demo
-### 3.1 Demo via the Shiny app (small example dataset)
+### 3.1 Demo via the Shiny app
 The Shiny app includes a built-in example dataset under the dropdown:
-- Example Images: Lean mouse · High adiposity mouse
+- Example Images: Lean mouse · High adiposity mouse.
+
 You can use this directly to demo the model:
 - Go to: https://fullerlabtools.shinyapps.io/dexadipo-ai/
 
 In the image selection panel, choose:
-- “Lean mouse” (low adiposity example)
-- “High adiposity mouse” (high adiposity example)
-Draw a reasonable ROI around the torso as instructed.
-Run predictions.
+- “Lean mouse” (low adiposity example) and "High adiposity mouse” (high adiposity example)
+- Draw a reasonable ROI around the torso as instructed.
+- Run predictions.
+
 Typical prediction ranges observed based on ROI selection
+
 High_adiposity_example
 - SUBQ: ~5.53–5.96 g
 - VAT: ~7.77–10.60 g
-Low_adiposity_example (Lean mouse)
+
+Low_adiposity_example
 - SUBQ: ~1.79–2.03 g
 - VAT: ~2.61–3.21 g 
+
 These ranges reflect small variations due to ROI placement but are robust to reasonable differences.
 
 Expected run time (demo via Shiny):
