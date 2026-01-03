@@ -73,8 +73,8 @@ These values reflect performance on previously unseen animals.
 ---
 
 ### Getting started (quick)
-- **Model inference:** Use any Python environment with TensorFlow/Keras, and code named DEXAdipo_inference.py. For fine-tuning use DEXAdipo_train.py
-- **Or try the online version:** https://fullerlabtools.shinyapps.io/dexadipo-ai/
+- **Online version:** https://fullerlabtools.shinyapps.io/dexadipo-ai/
+- Guidance for using the Shiny app, running the local Python demo, training on your own data, and performing inference is provided in the sections below.
 
 ---
 
@@ -178,12 +178,12 @@ In the image selection panel, choose:
 Typical prediction ranges observed based on ROI selection
 
 High_adiposity_example
-- SUBQ: ~5.53–5.96 g
-- VAT: ~7.77–10.60 g
+- **SUBQ:** ~5.53–5.96 g
+- **VAT:** ~7.77–10.60 g
 
 Low_adiposity_example
-- SUBQ: ~1.79–2.03 g
-- VAT: ~2.61–3.21 g 
+- **SUBQ:** ~1.79–2.03 g
+- **VAT:** ~2.61–3.21 g 
 
 These ranges reflect small variations due to ROI placement but are robust to reasonable differences.
 
@@ -254,8 +254,8 @@ For 2–10 images on a standard CPU-only desktop, inference completes in a few s
 Acquire single-energy DR images and export them to any of the supported formats.
 
 Ensure:
-- Mice are oriented consistently (nose to the right, body horizontal).
-- The torso is fully visible in the ROI for the method you use.
+- **Mice are oriented consistently** (nose to the right, body horizontal).
+- **The torso is fully visible in the ROI** for the method you use.
 
 For training, create a CSV file with at least:
 - FILENAMES – image file names (e.g. mouse1.png)
@@ -351,19 +351,19 @@ On a modern GPU (e.g. RTX 4080), the full training procedure is on the order of 
 DEXAdipo_inference.py loads a trained model (either your own or the included pretrained SUBQ/VAT models) and applies it to new DR images.
 
 #### Using the included SUBQ and VAT models on your own images
-The repository includes pretrained models released under Releases → v1.0.0:
+The repository includes pretrained models released under **Releases → v1.0.0:**
 - SUBQ_model.h5 – predicts subcutaneous adipose tissue (SUBQ) mass
 - VAT_model.h5 – predicts visceral adipose tissue (VAT) mass
 
 To use these with your own images:
 
 #### Prepare your DR images
-- Acquire single-energy, low-energy DR images at ~35–45 kVp.
+- Acquire single-energy, **low-energy DR images at ~35–45 kVp.**
 - Accepted formats: DICOM / TIFF / PNG / JPG.
-- Use a DR acquisition pipeline where the background is approximately white and the mouse appears dark/black relative to the background.
+- Use a DR acquisition pipeline where the background is **approximately white and the mouse appears dark/black relative to the background.**
 - Set the global Pixels/mm resolution consistently across images, for example:
-  - Faxitron® UltraFocusDXA: ~21.33 pixels/mm
-  - MEDIKORS InAlyzer DEXA: ~3.90 pixels/mm
+  - **Faxitron® UltraFocusDXA:** ~21.33 pixels/mm
+  - **MEDIKORS InAlyzer DEXA:** ~3.90 pixels/mm
 
 #### Standardise orientation and ROI
 For best agreement with the pretrained models:
@@ -392,7 +392,7 @@ mouseA.png
 mouseB.png
 ```
 #### Configure DEXAdipo_inference.py
-Set new_img_size to match the resolution used for the released models (typically:
+Set new_img_size to match the resolution used for the released models, typically:
 - new_img_size = (512, 512)
 
 - To predict SUBQ using the pretrained model:
