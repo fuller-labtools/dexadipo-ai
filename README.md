@@ -262,228 +262,167 @@ data/
 The training script is configured by default for SUBQ regression.
 
 Open DEXAdipo_train.py and set the CONFIG paths:
-
+```bash
 LABEL_CSV      = "data/train_labels_subq.csv"   # CSV with FILENAMES and SUBQ
 IMAGE_BASE_DIR = "data/train_images"            # Directory containing PNG images
 MODELS_DIR     = "models/subq"                  # Output directory for models/checkpoints
-
+```
 
 The CSV must contain at least:
-
+```bash
 FILENAMES,SUBQ
 mouse1.png,3.45
 mouse2.png,5.12
 ...
-
-
-Important internal details (matching the script):
-
-Images are loaded via skimage.io.imread(..., as_gray=True)
-
-Images are resized to new_img_size = (256, 256)
-
-Pixel intensities are rescaled to [0, 1] with a safeguard against zero range
-
-A single channel is added (shape (256, 256, 1))
-
+```
 Run the training script:
-
+```bash
 python DEXAdipo_train.py
+```
 
-
-What the script does:
-
-Loads and checks your label CSV (requires FILENAMES and SUBQ)
-
-Loads PNG images from IMAGE_BASE_DIR and preprocesses them
-
-Splits the data into:
-
-Train
-
-Validation
-
-Held-out temp/test subset (X_temp, y_temp)
-
-Builds a residual CNN via regression_model()
-
-Compiles with:
-
-loss = combined_loss (MSE + 1 − R²)
-
-metrics = ["mse", RSquare()]
+#### What the script does:
+- Loads and checks your label CSV (requires FILENAMES and SUBQ)
+- Loads PNG images from IMAGE_BASE_DIR and preprocesses them
+- Splits the data into:
+  - Train
+  - Validation
+  - Held-out temp/test subset (X_temp, y_temp)
+- Builds a residual CNN via regression_model()
+- Compiles with:
+  - loss = combined_loss (MSE + 1 − R²)
+  - metrics = ["mse", RSquare()]
 
 Uses data augmentation (ImageDataGenerator) with:
+- rotation_range = 5
+- width_shift_range = 0.1
+- height_shift_range = 0.1
 
-rotation_range = 5
-
-width_shift_range = 0.1
-
-height_shift_range = 0.1
-
-Phase 1:
-
+#### Phase 1:
 Trains up to 8000 epochs with:
+- ModelCheckpoint saving to best_initial_model.h5 (best val_loss)
+- ReduceLROnPlateau (factor 0.7, patience 800, min LR 1e-6)
+- A custom callback that logs validation MSE and R²
 
-ModelCheckpoint saving to best_initial_model.h5 (best val_loss)
-
-ReduceLROnPlateau (factor 0.7, patience 800, min LR 1e-6)
-
-A custom callback that logs validation MSE and R²
-
-Phase 2:
-
+#### Phase 2:
 Loads best_initial_model.h5, recompiles with a smaller LR (1e-6), and:
+- Trains 1 epoch at a time for 800 epochs
+- Saves each epoch as second_phase_model_epoch_{epoch}.h5
+- Logs validation metrics via the custom callback
 
-Trains 1 epoch at a time for 800 epochs
-
-Saves each epoch as second_phase_model_epoch_{epoch}.h5
-
-Logs validation metrics via the custom callback
-
-Model selection and final save:
-
+#### Model selection and final save:
 After training, the script:
-
-Iterates over all second_phase_model_epoch_*.h5 models
-
-Evaluates each on the held-out X_temp, y_temp
-
-Computes MSE and R²
-
-Computes a combined score:
-
-combined_score = 0.8 * R² + 0.6 * (1 / (1 + MSE))
-
-
-Selects the model with the best combined score
-
-Prints the best model path, its MSE and R² on the test data
-
-Saves the final selected model as:
-
-MODELS_DIR/final_best_model.h5
+- Iterates over all second_phase_model_epoch_*.h5 models
+- Evaluates each on the held-out X_temp, y_temp
+- Computes MSE and R²
+- Computes a combined score:
+  - combined_score = 0.8 * R² + 0.6 * (1 / (1 + MSE))
+- Selects the model with the best combined score
+- Prints the best model path, its MSE and R² on the test data
+- Saves the final selected model as:
+  - MODELS_DIR/final_best_model.h5
 
 
-Training time:
-
+#### Training time:
 The script measures and prints:
-
-Phase 1 training time
-
-Phase 2 training time
-
-Total training time
+- Phase 1 training time
+- Phase 2 training time
+- Total training time
 
 On a modern GPU (e.g. RTX 4080), the full training procedure is on the order of ~1 hour (exact time depends on dataset size and hardware).
 
-4.3 Training a VAT model
+### 4.3 Running inference on new images (DEXAdipo_inference.py)
 
-The provided DEXAdipo_train.py is written for a SUBQ label column. To train a VAT model you can either:
+DEXAdipo_inference.py loads a trained model (either your own or the included pretrained SUBQ/VAT models) and applies it to new DR images.
 
-Duplicate the script (e.g. DEXAdipo_train_vat.py) and:
+#### Using the included SUBQ and VAT models on your own images
+The repository includes pretrained models released under Releases → v1.0.0:
+- SUBQ_model.h5 – predicts subcutaneous adipose tissue (SUBQ) mass
+- VAT_model.h5 – predicts visceral adipose tissue (VAT) mass
 
-Change required_cols = {"FILENAMES", "SUBQ"} to use "VAT".
+To use these with your own images:
 
-Replace references to row["SUBQ"] with row["VAT"].
+#### Prepare your DR images
+- Acquire single-energy, low-energy DR images at ~35–45 kVp.
+- Accepted formats: DICOM / TIFF / PNG / JPG.
+- Use a DR acquisition pipeline where the background is approximately white and the mouse appears dark/black relative to the background.
+- Set the global Pixels/mm resolution consistently across images, for example:
+  - Faxitron® UltraFocusDXA: ~21.33 pixels/mm
+  - MEDIKORS InAlyzer DEXA: ~3.90 pixels/mm
 
-Or refactor the script to accept a configurable target column.
+#### Standardise orientation and ROI
+For best agreement with the pretrained models:
+- Orient each mouse so the nose points to the right and the body is horizontal.
+- Define a torso ROI so that:
+  - The vertebral column is centred on the vertical midline of the ROI.
+  - The cranial/upper border of the ROI transects the head just rostral to the pinnae/ear canals (i.e. include the caudal skull but exclude the snout/face).
+  - The torso is fully inside the ROI.
 
-The rest of the pipeline (architecture, loss, selection) remains the same.
+If you are using the Shiny app to explore ROI placement, mimic that same ROI when exporting images for Python inference.
 
-4.4 Running inference on new images (DEXAdipo_inference.py)
-
-DEXAdipo_inference.py loads a trained model and applies it to new DR images.
-
-Prepare a CSV for your new data:
-
+#### Organise files and create a CSV
+Put your preprocessed DR images in a folder, e.g.:
+```bash
 data/
   new_images/
     mouseA.png
     mouseB.png
     ...
   new_images.csv
-
-
-new_images.csv must contain a FILENAMES column:
-
+```
+new_images.csv must contain at least a FILENAMES column:
+```bash
 FILENAMES
 mouseA.png
 mouseB.png
-...
+```
+#### Configure DEXAdipo_inference.py
 
+Set new_img_size to match the resolution used for the released models (typically:
+- new_img_size = (512, 512)
 
-Edit the CONFIG section at the top of DEXAdipo_inference.py:
+- To predict SUBQ using the pretrained model:
+```bash
+MODEL_PATH      = "path/to/SUBQ_model.h5"
+NEW_DATASET_CSV = "data/new_images.csv"
+BASE_DIR        = "data/new_images"
+OUTPUT_CSV      = "results/new_predictions_SUBQ.csv"
+```
 
-MODEL_PATH      = "models/subq/final_best_model.h5"   # or VAT model
-NEW_DATASET_CSV = "data/new_images.csv"               # CSV with FILENAMES column
-BASE_DIR        = "data/new_images"                   # directory containing PNGs
-OUTPUT_CSV      = "results/new_predictions.csv"       # where to save outputs
+To predict VAT using the pretrained model:
+```bash
+MODEL_PATH      = "path/to/VAT_model.h5"
+NEW_DATASET_CSV = "data/new_images.csv"
+BASE_DIR        = "data/new_images"
+OUTPUT_CSV      = "results/new_predictions_VAT.csv"
+```
 
+If you have trained your own model, simply point MODEL_PATH to your file instead (e.g. models/subq/final_best_model.h5 or models/vat/final_best_model.h5).
 
-Note on image size in the inference script:
-
-new_img_size = (512, 512)
-
-
-By default, inference resizes images to 512 × 512.
-
-If your model was trained on 256 × 256 (default in DEXAdipo_train.py), you can change this line to:
-
-new_img_size = (256, 256)
-
-
-to exactly match the training resolution.
-
-Run:
-
+Run inference
+```bash
 python DEXAdipo_inference.py
-
-
-What the script does:
-
-Loads the model from MODEL_PATH with:
-
+```
+#### What the script does
+- Loads the model from MODEL_PATH with:
+```bash
 best_model = tf.keras.models.load_model(
     MODEL_PATH,
     custom_objects={"RSquare": RSquare, "combined_loss": combined_loss},
     compile=False
 )
+```
+- Reads NEW_DATASET_CSV and checks for a FILENAMES column.
+- For each filename:
+  - Constructs img_path = os.path.join(BASE_DIR, FILENAMES)
+  - Loads the image via imread
+  - Resizes to new_img_size
+  - Rescales intensities to [0, 1] (with a zero-range safeguard)
+  - Adds a channel dimension to form (H, W, 1)
+ - Stacks all images into a NumPy array new_data.
+ - Creates a DataFrame with:
+  - Filename, Predicted
+- Prints all predictions and saves them to OUTPUT_CSV.
 
-
-Then:
-
-Reads NEW_DATASET_CSV, checks for a FILENAMES column
-
-For each filename:
-
-Constructs img_path = os.path.join(BASE_DIR, FILENAMES)
-
-Loads image via imread(..., as_gray=True)
-
-Resizes to new_img_size
-
-Rescales intensities to [0, 1] (with a zero-range safeguard)
-
-Adds a channel dimension to form (H, W, 1)
-
-Stacks all images into a NumPy array new_data
-
-Runs:
-
-new_predictions = best_model.predict(new_data).squeeze()
-
-
-Creates a DataFrame with:
-
-Filename, Predicted
-
-
-Prints all predictions and saves them to OUTPUT_CSV.
-
-Expected runtime (inference):
-
-For tens of images on CPU, inference typically runs in seconds to a couple of minutes, depending on CPU speed and model size.
-
-On GPU, inference is effectively instantaneous for typical batch sizes.
-
+#### Expected runtime (inference)
+- For tens of images on CPU, inference typically runs in seconds to a couple of minutes, depending on CPU speed and model size.
+- On GPU, inference is effectively instantaneous for typical batch sizes.
