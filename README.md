@@ -78,13 +78,13 @@ These values reflect performance on previously unseen animals.
 
 ---
 
-## 1. System requirements
+### 1. System requirements
 
 ### 1.1 Operating systems
 
 DEXAdipo is implemented in Python and TensorFlow/Keras and should run on any 64-bit OS that supports these libraries, including:
 
-- Linux (e.g. Ubuntu or similar recent distributions)
+- Linux
 - macOS (Intel or Apple Silicon, via a compatible Python + TensorFlow 2.x installation)
 - Windows 10/11 (native Python or WSL2)
 
@@ -104,5 +104,380 @@ You can either install these directly (see below) or run:
 
 ```bash
 pip install -r requirements.txt
+```
+### 1.3 Versions tested
+Tested on the following configuration:
+- OS: Windows 11, Version 25H2 (OS Build 26200.7462)
+- System type: 64-bit operating system, x64-based processor
+- CPU: 13th Gen Intel(R) Core(TM) i9-13900KF @ 3.00 GHz
+- RAM: 64.0 GB 
+- GPU: NVIDIA GeForce RTX 4080
+- Python: 3.9.18
+- TensorFlow: 2.10.0 (GPU build)
+- CUDA toolkit: 11.8 (nvcc 11.8.89)
 
+### 1.4 Non-standard hardware
+Training: An NVIDIA GPU (≥ 8 GB VRAM) is strongly recommended for full training as described in the manuscript and in DEXAdipo_train.py.
+
+Inference / demo: CPU-only is sufficient for small batches of DR images; predicting on a handful of DR images runs in seconds on a standard 4-core desktop or laptop.
+
+---
+
+### 2. Installation guide
+### 2.1 Instructions
+Clone the repository
+
+```bash
+git clone https://github.com/fuller-labtools/dexadipo-ai.git
+cd dexadipo-ai
+```
+Create and activate a fresh Python environment (recommended)
+```bash
+# Linux/macOS
+python -m venv dexadipo_env
+source dexadipo_env/bin/activate
+# or, on Windows:
+dexadipo_env\Scripts\activate
+```
+Install dependencies
+```bash
+pip install --upgrade pip
+pip install tensorflow numpy pandas scikit-image scikit-learn matplotlib
+# or simply:
+# pip install -r requirements.txt
+```
+If you have a CUDA-capable GPU, install the appropriate GPU-enabled TensorFlow build.
+- Download / place the trained model file(s)
+- Place your trained .h5 model file(s) (e.g. DXA_PRED_SUBQ_PNG_r2_99.h5 or final_best_model.h5) in a convenient directory.
+- Point MODEL_PATH in DEXAdipo_inference.py to this file.
+
+### 2.2 Typical install time
+On a “normal” desktop or laptop with a reasonable internet connection, creating the environment and installing the Python dependencies typically takes ~10–20 minutes.
+
+---
+
+### 3. Demo
+### 3.1 Demo via the Shiny app (small example dataset)
+The Shiny app includes a built-in example dataset under the dropdown:
+- Example Images: Lean mouse · High adiposity mouse
+- You can use this directly to demo the model:
+- Go to: https://fullerlabtools.shinyapps.io/dexadipo-ai/
+
+In the image selection panel, choose:
+- “Lean mouse” (low adiposity example)
+- “High adiposity mouse” (high adiposity example)
+- Draw a reasonable ROI around the torso as instructed.
+- Run predictions.
+Typical prediction ranges observed based on ROI selection
+High_adiposity_example
+- SUBQ: ~5.53–5.96 g
+- VAT: ~7.77–10.60 g
+Low_adiposity_example (Lean mouse)
+- SUBQ: ~1.79–2.03 g
+- VAT: ~2.61–3.21 g 
+These ranges reflect small variations due to ROI placement but are robust to reasonable differences.
+
+Expected run time (demo via Shiny):
+- Prediction for each example image is essentially instantaneous from the user’s perspective.
+
+### 3.2 local Python demo
+If you prefer a local Python demo:
+Prepare a small folder of DR images (e.g. DICOMs, TIFFs, PNGs) and a CSV with a FILENAMES column:
+
+demo/
+  demo_images/
+    High_adiposity_example.png
+    Low_adiposity_example.png
+  demo_newdata.csv
+
+
+Example demo_newdata.csv:
+FILENAMES
+High_adiposity_example.png
+Low_adiposity_example.png
+
+
+Edit DEXAdipo_inference.py:
+
+MODEL_PATH = "path/to/your_trained_model.h5"
+NEW_DATASET_CSV = "demo/demo_newdata.csv"
+BASE_DIR = "demo/demo_images"
+OUTPUT_CSV = "demo/demo_predictions.csv"
+
+
+Run:
+python DEXAdipo_inference.py
+
+The script prints a table like:
+
+Filename                     Predicted
+High_adiposity_example.png   9.1
+Low_adiposity_example.png    2.9
+
+
+(Values will differ depending on which trained model you use and the actual images.)
+
+The same results are saved to demo/demo_predictions.csv.
+
+Expected run time (local demo):
+
+For 2–10 images on a standard CPU-only desktop, inference completes in a few seconds (≪ 1 minute).
+
+---
+
+### 4. Instructions for use (running on your own data)
+### 4.1 Preparing your data
+
+Acquire single-energy DR images and export them to any of the supported formats.
+
+Ensure:
+- Mice are oriented consistently (nose to the right, body horizontal).
+- The torso is fully visible in the ROI for the method you use.
+
+For training, create a CSV file with at least:
+
+FILENAMES – image file names (e.g. mouse1.png)
+
+SUBQ – numeric labels for subcutaneous depot mass in grams
+
+(Use VAT instead if you adapt the script for visceral training.)
+
+Store images and CSV in a directory structure such as:
+
+data/
+  train_images/
+    mouse1.png
+    mouse2.png
+    ...
+  train_labels_subq.csv
+
+4.2 Training a new SUBQ model from scratch (DEXAdipo_train.py)
+
+The training script is configured by default for SUBQ regression.
+
+Open DEXAdipo_train.py and set the CONFIG paths:
+
+LABEL_CSV      = "data/train_labels_subq.csv"   # CSV with FILENAMES and SUBQ
+IMAGE_BASE_DIR = "data/train_images"            # Directory containing PNG images
+MODELS_DIR     = "models/subq"                  # Output directory for models/checkpoints
+
+
+The CSV must contain at least:
+
+FILENAMES,SUBQ
+mouse1.png,3.45
+mouse2.png,5.12
+...
+
+
+Important internal details (matching the script):
+
+Images are loaded via skimage.io.imread(..., as_gray=True)
+
+Images are resized to new_img_size = (256, 256)
+
+Pixel intensities are rescaled to [0, 1] with a safeguard against zero range
+
+A single channel is added (shape (256, 256, 1))
+
+Run the training script:
+
+python DEXAdipo_train.py
+
+
+What the script does:
+
+Loads and checks your label CSV (requires FILENAMES and SUBQ)
+
+Loads PNG images from IMAGE_BASE_DIR and preprocesses them
+
+Splits the data into:
+
+Train
+
+Validation
+
+Held-out temp/test subset (X_temp, y_temp)
+
+Builds a residual CNN via regression_model()
+
+Compiles with:
+
+loss = combined_loss (MSE + 1 − R²)
+
+metrics = ["mse", RSquare()]
+
+Uses data augmentation (ImageDataGenerator) with:
+
+rotation_range = 5
+
+width_shift_range = 0.1
+
+height_shift_range = 0.1
+
+Phase 1:
+
+Trains up to 8000 epochs with:
+
+ModelCheckpoint saving to best_initial_model.h5 (best val_loss)
+
+ReduceLROnPlateau (factor 0.7, patience 800, min LR 1e-6)
+
+A custom callback that logs validation MSE and R²
+
+Phase 2:
+
+Loads best_initial_model.h5, recompiles with a smaller LR (1e-6), and:
+
+Trains 1 epoch at a time for 800 epochs
+
+Saves each epoch as second_phase_model_epoch_{epoch}.h5
+
+Logs validation metrics via the custom callback
+
+Model selection and final save:
+
+After training, the script:
+
+Iterates over all second_phase_model_epoch_*.h5 models
+
+Evaluates each on the held-out X_temp, y_temp
+
+Computes MSE and R²
+
+Computes a combined score:
+
+combined_score = 0.8 * R² + 0.6 * (1 / (1 + MSE))
+
+
+Selects the model with the best combined score
+
+Prints the best model path, its MSE and R² on the test data
+
+Saves the final selected model as:
+
+MODELS_DIR/final_best_model.h5
+
+
+Training time:
+
+The script measures and prints:
+
+Phase 1 training time
+
+Phase 2 training time
+
+Total training time
+
+On a modern GPU (e.g. RTX 4080), the full training procedure is on the order of ~1 hour (exact time depends on dataset size and hardware).
+
+4.3 Training a VAT model
+
+The provided DEXAdipo_train.py is written for a SUBQ label column. To train a VAT model you can either:
+
+Duplicate the script (e.g. DEXAdipo_train_vat.py) and:
+
+Change required_cols = {"FILENAMES", "SUBQ"} to use "VAT".
+
+Replace references to row["SUBQ"] with row["VAT"].
+
+Or refactor the script to accept a configurable target column.
+
+The rest of the pipeline (architecture, loss, selection) remains the same.
+
+4.4 Running inference on new images (DEXAdipo_inference.py)
+
+DEXAdipo_inference.py loads a trained model and applies it to new DR images.
+
+Prepare a CSV for your new data:
+
+data/
+  new_images/
+    mouseA.png
+    mouseB.png
+    ...
+  new_images.csv
+
+
+new_images.csv must contain a FILENAMES column:
+
+FILENAMES
+mouseA.png
+mouseB.png
+...
+
+
+Edit the CONFIG section at the top of DEXAdipo_inference.py:
+
+MODEL_PATH      = "models/subq/final_best_model.h5"   # or VAT model
+NEW_DATASET_CSV = "data/new_images.csv"               # CSV with FILENAMES column
+BASE_DIR        = "data/new_images"                   # directory containing PNGs
+OUTPUT_CSV      = "results/new_predictions.csv"       # where to save outputs
+
+
+Note on image size in the inference script:
+
+new_img_size = (512, 512)
+
+
+By default, inference resizes images to 512 × 512.
+
+If your model was trained on 256 × 256 (default in DEXAdipo_train.py), you can change this line to:
+
+new_img_size = (256, 256)
+
+
+to exactly match the training resolution.
+
+Run:
+
+python DEXAdipo_inference.py
+
+
+What the script does:
+
+Loads the model from MODEL_PATH with:
+
+best_model = tf.keras.models.load_model(
+    MODEL_PATH,
+    custom_objects={"RSquare": RSquare, "combined_loss": combined_loss},
+    compile=False
+)
+
+
+Then:
+
+Reads NEW_DATASET_CSV, checks for a FILENAMES column
+
+For each filename:
+
+Constructs img_path = os.path.join(BASE_DIR, FILENAMES)
+
+Loads image via imread(..., as_gray=True)
+
+Resizes to new_img_size
+
+Rescales intensities to [0, 1] (with a zero-range safeguard)
+
+Adds a channel dimension to form (H, W, 1)
+
+Stacks all images into a NumPy array new_data
+
+Runs:
+
+new_predictions = best_model.predict(new_data).squeeze()
+
+
+Creates a DataFrame with:
+
+Filename, Predicted
+
+
+Prints all predictions and saves them to OUTPUT_CSV.
+
+Expected runtime (inference):
+
+For tens of images on CPU, inference typically runs in seconds to a couple of minutes, depending on CPU speed and model size.
+
+On GPU, inference is effectively instantaneous for typical batch sizes.
 
